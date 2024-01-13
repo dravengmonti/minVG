@@ -61,6 +61,7 @@ void evenOdd(char *area, int w, int h, struct point *line) {
     for (int x = 0; x < w; x++) {
         for (int y = 0; y < h; y++) {
             if ((line[0].y > y) == (line[1].y > y)) continue;
+        
             double slope =
                 (x - line[0].x) * (line[1].y - line[0].y) - (line[1].x - line[0].x) * (y - line[0].y);
             if ((slope < 0) != (line[1].y < line[0].y)) area[x+y*w] = !area[x+y*w]; 
@@ -68,43 +69,72 @@ void evenOdd(char *area, int w, int h, struct point *line) {
     }
 }
 
+void approxCurve(char *area, int w, int h, struct point *line) {
+    struct point p1 = line[0];
+    for (int i = 0; i < 64; i++) {
+        double t = i / 64.0;
+ 
+        struct point p2 = p1; 
+        p1.x = (1-t*t*t) * line[0].x + (1-t*t)*3*t * line[1].x + (1-t)*3*t*t * line[2].x + t*t*t*line[3].x;
+        p1.y = (1-t*t*t) * line[0].y + (1-t*t)*3*t * line[1].y + (1-t)*3*t*t * line[2].y + t*t*t*line[3].y; 
+
+        struct point line2[2];
+        line2[0] = p1;
+        line2[1] = p2;
+
+        evenOdd(area, w, h, line2); 
+    }
+}
+
 void rFile(char *file, struct color *img, int w, int h) {
     FILE *f = fopen(file,"r");
-    char area[w*h], command[1024], stack[1024];
+    char area[w*h], command[1024], lastCmd = 'E';
     int cmdI = 0, scopeSwitch = 0, afterCmd = 0;
 
-    struct point line[2];
+    struct point line[4];
 
     memset(area,0,w*h);
 
     while (fgets(command,1024,f)) {
         char cmd = command[0];
-        if (cmd == 'E') {
+        if (cmd == 'P') {
+            afterCmd = 3;
+        } else if (cmd == 'L') {
             afterCmd = 1;
-            stack[cmdI] = '\0';
-            cmdI--;
-        } else if (cmd >= 'A' && cmd <= 'Z') {
-            afterCmd = 1;
-            stack[cmdI] = cmd;
-            cmdI++;
+        } else if (cmd >= 'A' && cmd <= 'Z'){
+            afterCmd = 0;
+        } else if (cmd == ' ') {
+
         } else {
             struct intRes dat = toInt(command); 
             struct point thePoint = {
                 .x = dat.i,
                 .y = toInt(dat.buf).i
             };
-           
-            line[0] = line[1];
-            line[1] = thePoint;
 
-            if (afterCmd) {
-                afterCmd = 0; 
-                continue;
+            if (lastCmd == 'L') {
+                line[0] = line[1];
+                line[1] = thePoint;
+                if (afterCmd > 0) {
+                    afterCmd--; 
+                    continue;
+                }
+                evenOdd(area,w,h,line);
+            } else if (lastCmd == 'P') { 
+                line[0] = line[1];
+                line[1] = line[2];
+                line[2] = line[3];
+                line[3] = thePoint;
+                if (afterCmd > 0) {
+                    afterCmd--; 
+                    continue;
+                }
+                afterCmd = 3;
+                approxCurve(area, w, h, line);
             }
-    
-            evenOdd(area, w, h, line);
-     
+            continue;
         }
+        lastCmd = cmd;
     }
 
     for (int i = 0; i < w*h; i++) {
