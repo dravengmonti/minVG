@@ -101,10 +101,27 @@ void rFile(char *file, struct color *img, int w, int h) {
             afterCmd = 3;
         } else if (cmd == 'L') {
             afterCmd = 1;
+        } else if (cmd == 'N') {
         } else if (cmd >= 'A' && cmd <= 'Z'){
             afterCmd = 0;
         } else if (cmd == ' ') {
 
+        } else if (lastCmd == 'N') {
+            struct intRes dat = toInt(command); 
+            struct intRes dat2 = toInt(dat.buf);
+            
+            struct color rgb = {
+                .r = dat.i,
+                .g = dat2.i,
+                .b = toInt(dat2.buf).i
+            };
+
+            for (int i = 0; i < w*h; i++) {
+                img[i].r = area[i] ? rgb.r : img[i].r;
+                img[i].g = area[i] ? rgb.g : img[i].g;
+                img[i].b = area[i] ? rgb.b : img[i].b;
+                area[i] = 0;
+            } 
         } else {
             struct intRes dat = toInt(command); 
             struct point thePoint = {
@@ -136,11 +153,10 @@ void rFile(char *file, struct color *img, int w, int h) {
         }
         lastCmd = cmd;
     }
-
     for (int i = 0; i < w*h; i++) {
-        img[i].r = area[i] ? 255 : 0;
-        img[i].g = area[i] ? 255 : 0;
-        img[i].b = area[i] ? 255 : 0;
+        img[i].r = area[i] ? 255 : img[i].r;
+        img[i].g = area[i] ? 255 : img[i].g;
+        img[i].b = area[i] ? 255 : img[i].b;
     }
 }
 
