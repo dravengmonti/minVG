@@ -1,4 +1,4 @@
 MONTI MINIMAL VECTOR GRAPHICS
 ----------------------------
-A custom Beizer curve standard that doesn't use XML or other fancy features.
+A linear vector graphics standard that doesn't use XML or other fancy features.
 Converts to BMP by default.
