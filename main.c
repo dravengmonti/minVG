@@ -73,10 +73,11 @@ void approxCurve(char *area, size_t w, size_t h, struct point *line) {
     struct point p1 = line[0];
     for (int i = 0; i < 64; i++) {
         double t = i / 64.0;
- 
+        double t2 = 1.0 - t;
+    
         struct point p2 = p1; 
-        p1.x = (1-t*t*t) * line[0].x + (1-t*t)*3*t * line[1].x + (1-t)*3*t*t * line[2].x + t*t*t*line[3].x;
-        p1.y = (1-t*t*t) * line[0].y + (1-t*t)*3*t * line[1].y + (1-t)*3*t*t * line[2].y + t*t*t*line[3].y; 
+        p1.x = t2 * t2 * t2 * line[0].x + t2*t2*3*t * line[1].x + t2*3*t*t * line[2].x + t*t*t*line[3].x;
+        p1.y = t2 * t2 * t2 * line[0].y + t2*t2*3*t * line[1].y + t2*3*t*t * line[2].y + t*t*t*line[3].y; 
 
         struct point line2[2];
         line2[0] = p1;
