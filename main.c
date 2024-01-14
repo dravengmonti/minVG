@@ -24,7 +24,7 @@ struct intRes toInt(char *buf) {
     return res;
 }
 
-void wFile(char *file, struct color* img, int w, int h) {
+void wFile(char *file, struct color* img, size_t w, size_t h) {
     FILE *f;
     int filesize = (54 + 3*w*h);
 
@@ -57,9 +57,9 @@ void wFile(char *file, struct color* img, int w, int h) {
     fclose(f);
 }
 
-void evenOdd(char *area, int w, int h, struct point *line) {  
-    for (int x = 0; x < w; x++) {
-        for (int y = 0; y < h; y++) {
+void evenOdd(char *area, size_t w, size_t h, struct point *line) {  
+    for (size_t x = 0; x < w; x++) {
+        for (size_t y = 0; y < h; y++) {
             if ((line[0].y > y) == (line[1].y > y)) continue;
         
             double slope =
@@ -69,7 +69,7 @@ void evenOdd(char *area, int w, int h, struct point *line) {
     }
 }
 
-void approxCurve(char *area, int w, int h, struct point *line) {
+void approxCurve(char *area, size_t w, size_t h, struct point *line) {
     struct point p1 = line[0];
     for (int i = 0; i < 64; i++) {
         double t = i / 64.0;
@@ -86,14 +86,17 @@ void approxCurve(char *area, int w, int h, struct point *line) {
     }
 }
 
-void rFile(char *file, struct color *img, int w, int h) {
+void rFile(char *file, struct color *img, size_t w, size_t h) {
     FILE *f = fopen(file,"r");
-    char area[w*h], command[1024], lastCmd = 'E';
+    char *area, command[1024], lastCmd = 'E';
     int cmdI = 0, scopeSwitch = 0, afterCmd = 0;
 
     struct point line[4];
 
+    area = malloc(w*h);
+
     memset(area,0,w*h);
+    memset(img,0,3*w*h);
 
     while (fgets(command,1024,f)) {
         char cmd = command[0];
@@ -153,11 +156,12 @@ void rFile(char *file, struct color *img, int w, int h) {
         }
         lastCmd = cmd;
     }
-    for (int i = 0; i < w*h; i++) {
+    for (size_t i = 0; i < w*h; i++) {
         img[i].r = area[i] ? 255 : img[i].r;
         img[i].g = area[i] ? 255 : img[i].g;
         img[i].b = area[i] ? 255 : img[i].b;
     }
+    free(area);
 }
 
 int main(int argc, char **argv) {
@@ -165,14 +169,16 @@ int main(int argc, char **argv) {
         printf("usage: %s [input file] [output file] [width] [height]\n",argv[0]);
         return -1;
     }
-    int w, h;
+    size_t w, h;
 
     w = toInt(argv[3]).i;
     h = toInt(argv[4]).i;
 
-    struct color img[w*h];   
+    struct color *img = malloc(sizeof(struct color) * w * h);   
     
     rFile(argv[1],img,w,h);
 
     wFile(argv[2],img,w,h);
+   
+    free(img);
 }
